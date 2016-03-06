@@ -18,13 +18,42 @@ function handleResponse (err, response, body, cb) {
   cb(null, body)
 }
 
-ColoredCoins.prototype.get = function (method, params, cb) {
-  // var params_string = qs.stringify(params)
-  var params_string = ''
-  for (var key in params) {
-    var value = params[key]
-    params_string += '/' + value
+function buildPathParamsString (params) {
+  var str = ''
+  if (params && Object.keys(params)) {
+    Object.keys(params).forEach(function (key) {
+      var value = params[key]
+      str += '/' + value    
+    })
+  } 
+  return str
+}
+
+function buildQueryParamsString (params) {
+  var str = ''
+  if (params && Object.keys(params).length) {
+    str += '?'
+    var firstOptional = true
+    Object.keys(params).forEach(function (key) {
+      var value = params[key]
+      if (!firstOptional) {
+        str += '&'
+      }
+      str += (key + '=' + value)
+      firstOptional = false
+    })
   }
+  return str
+}
+
+ColoredCoins.prototype.get = function (method, pathParams, queryParams, cb) {
+  if (typeof queryParams === 'function') {
+    cb = queryParams
+    queryParams = null
+  }
+  
+  var params_string = buildPathParamsString(pathParams)
+  params_string += buildQueryParamsString(queryParams)
   var path = this.ccPath + '/' + method + params_string
   request.get(path, function (err, response, body) {
     handleResponse(err, response, body, cb)
